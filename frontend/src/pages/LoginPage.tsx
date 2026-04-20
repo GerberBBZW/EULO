@@ -4,20 +4,27 @@ import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
+
 export function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    // Simulate network delay
-    setTimeout(() => {
-      login(email);
+    try {
+      await login(email, password);
+    } catch {
+      setError('Invalid email or password. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -26,9 +33,7 @@ export function LoginPage() {
             <GraduationCap className="w-10 h-10" />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
-          EULO
-        </h2>
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">EULO</h2>
         <p className="mt-2 text-center text-sm text-slate-600">
           Education Unlocked by Learning One-to-one
         </p>
@@ -38,13 +43,15 @@ export function LoginPage() {
         <Card className="border-0 shadow-xl">
           <CardContent className="p-8">
             <div className="mb-6 text-center">
-              <h3 className="text-lg font-medium text-slate-900">
-                Welcome Back!
-              </h3>
-              <p className="text-sm text-slate-500">
-                Sign in to access your dashboard
-              </p>
+              <h3 className="text-lg font-medium text-slate-900">Welcome Back!</h3>
+              <p className="text-sm text-slate-500">Sign in to access your dashboard</p>
             </div>
+
+            {error && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
             <form className="space-y-6" onSubmit={handleSubmit}>
               <Input
@@ -53,51 +60,24 @@ export function LoginPage() {
                 placeholder="student@school.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required />
-
-
+                required
+              />
               <Input
                 label="Password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required />
-
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
-
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-slate-900">
-
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <a
-                    href="#"
-                    className="font-medium text-teal-600 hover:text-teal-500">
-
-                    Forgot password?
-                  </a>
-                </div>
-              </div>
+                required
+              />
 
               <Button
                 type="submit"
                 className="w-full"
                 size="lg"
                 isLoading={isLoading}
-                rightIcon={<ArrowRight className="w-4 h-4" />}>
-
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+              >
                 Sign in
               </Button>
             </form>
@@ -108,15 +88,16 @@ export function LoginPage() {
                   <div className="w-full border-t border-slate-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-slate-500">
-                    Students helping students
-                  </span>
+                  <span className="bg-white px-2 text-slate-500">Students helping students</span>
                 </div>
               </div>
+              <p className="mt-4 text-center text-xs text-slate-400">
+                Demo: alex.rivera@school.edu / password123
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>);
-
+    </div>
+  );
 }

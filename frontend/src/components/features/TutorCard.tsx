@@ -8,8 +8,9 @@ import { TutoringOffer } from '../../types';
 interface TutorCardProps {
   offer: TutoringOffer;
   onRequest: (offer: TutoringOffer) => void;
+  isRequesting?: boolean;
 }
-export function TutorCard({ offer, onRequest }: TutorCardProps) {
+export function TutorCard({ offer, onRequest, isRequesting }: TutorCardProps) {
   return (
     <Card className="h-full flex flex-col">
       <CardContent className="p-5 flex-1">
@@ -65,7 +66,9 @@ export function TutorCard({ offer, onRequest }: TutorCardProps) {
         <Button
           variant="outline"
           className="w-full border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300"
-          onClick={() => onRequest(offer)}>
+          onClick={() => onRequest(offer)}
+          isLoading={isRequesting}
+          disabled={isRequesting}>
 
           Request Session
         </Button>

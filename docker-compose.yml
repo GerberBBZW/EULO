@@ -1,0 +1,41 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: eulo-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: eulo
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - eulo-net
+
+  backend:
+    build: ./backend
+    container_name: eulo-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/eulo
+      JWT_SECRET: ${JWT_SECRET:-euloChangeThisInProductionToALongRandomSecret}
+    depends_on:
+      - mongodb
+    networks:
+      - eulo-net
+
+  frontend:
+    build: ./frontend
+    container_name: eulo-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - eulo-net
+
+volumes:
+  mongo_data:
+
+networks:
+  eulo-net:
+    driver: bridge
