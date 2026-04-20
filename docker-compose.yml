@@ -33,8 +33,23 @@ services:
     networks:
       - eulo-net
 
+  # Test-Service mit persistentem Maven-Cache
+  # Erstes Mal (mit Internet):  docker compose --profile test run --rm test
+  # Ab dann offline:            docker compose --profile test run --rm test mvn test -o -B
+  test:
+    image: maven:3.9-eclipse-temurin-21
+    container_name: eulo-test
+    working_dir: /app
+    volumes:
+      - ./backend:/app          # Quellcode live eingebunden
+      - maven_cache:/root/.m2   # Persistenter Dependency-Cache (überlebt Container-Stop)
+    command: mvn test -B        # Default: online; für offline: mvn test -o -B
+    profiles:
+      - test                    # Nicht Teil des normalen docker compose up
+
 volumes:
   mongo_data:
+  maven_cache:                  # Überlebt container stop/remove
 
 networks:
   eulo-net:
