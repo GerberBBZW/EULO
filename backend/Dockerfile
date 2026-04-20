@@ -4,8 +4,13 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
+
+# Tests ausführen (schlägt fehl → Build stoppt)
+RUN mvn test -B
+
+# Paket ohne erneuten Testlauf erstellen
 RUN mvn package -DskipTests -B
- 
+
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
