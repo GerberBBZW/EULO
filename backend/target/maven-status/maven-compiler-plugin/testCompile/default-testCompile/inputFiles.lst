@@ -1,0 +1,6 @@
+/app/src/test/java/com/eulo/TestBase.java
+/app/src/test/java/com/eulo/SessionIntegrationTest.java
+/app/src/test/java/com/eulo/OfferIntegrationTest.java
+/app/src/test/java/com/eulo/AuthIntegrationTest.java
+/app/src/test/java/com/eulo/SubjectAndDashboardIntegrationTest.java
+/app/src/test/java/com/eulo/UserIntegrationTest.java

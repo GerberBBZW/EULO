@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -16,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
@@ -31,6 +33,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
+            String clientIp = request.getRemoteAddr();
+            String requestUri = request.getRequestURI();
+
             if (jwtUtil.isValid(token)) {
                 String userId = jwtUtil.extractUserId(token);
                 if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -41,6 +46,8 @@ public class JwtFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     });
                 }
+            } else {
+                log.warn("AUTH_FAIL: ungültiger Token von IP={} auf Endpunkt={}", clientIp, requestUri);
             }
         }
 

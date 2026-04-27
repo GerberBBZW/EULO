@@ -1,7 +1,7 @@
 services:
   mongodb:
     image: mongo:7
-    container_name: eulo-mongodb
+    container_name: eulo-mongo
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: eulo
@@ -15,7 +15,7 @@ services:
     container_name: eulo-backend
     restart: unless-stopped
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/eulo
+      SPRING_DATA_MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/eulo}
       JWT_SECRET: ${JWT_SECRET:-euloChangeThisInProductionToALongRandomSecret}
     depends_on:
       - mongodb
