@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/offers")
@@ -32,31 +33,33 @@ public class TutoringOfferController {
     }
 
     /**
-     * Force tutorId to the authenticated user (prevents spoofing).
-     * Sanitize free-text description.
+     * Force tutorId to the authenticated user (prevents IDOR spoofing).
+     * Sanitize free-text description against stored XSS.
      */
     @PostMapping
     public TutoringOffer createOffer(@Valid @RequestBody TutoringOffer offer, Authentication auth) {
         String me = (String) auth.getPrincipal();
-        offer.setTutorId(me);                                                   // IDOR: cannot post as someone else
-        offer.setDescription(InputSanitizer.sanitize(offer.getDescription()));   // XSS sanitize
+        offer.setTutorId(me);
+        offer.setDescription(InputSanitizer.sanitize(offer.getDescription()));
         return offerService.save(offer);
     }
 
     /**
      * IDOR guard: only the owner (tutor) of an offer may delete it.
+     * Returns 404 if not found, 403 if authenticated user is not the owner.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOffer(@PathVariable String id, Authentication auth) {
         String me = (String) auth.getPrincipal();
-        return offerService.findById(id)
-                .map(offer -> {
-                    if (!me.equals(offer.getTutorId())) {
-                        return ResponseEntity.status(403).<Void>build();
-                    }
-                    offerService.deleteById(id);
-                    return ResponseEntity.<Void>noContent().build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+
+        Optional<TutoringOffer> found = offerService.findById(id);
+        if (found.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!me.equals(found.get().getTutorId())) {
+            return ResponseEntity.status(403).build();
+        }
+        offerService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

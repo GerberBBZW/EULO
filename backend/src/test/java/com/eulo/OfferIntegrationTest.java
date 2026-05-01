@@ -171,11 +171,27 @@ class OfferIntegrationTest extends TestBase {
         @DisplayName("Authentifiziert und vorhanden → 204 No Content")
         void deleteOffer_withAuth_returns204() throws Exception {
             String token = obtainToken();
+            // Controller now fetches the offer first to verify ownership (IDOR guard)
+            when(offerRepository.findById("o1")).thenReturn(Optional.of(buildOffer("o1")));
             doNothing().when(offerRepository).deleteById("o1");
 
             mockMvc.perform(delete("/api/offers/o1")
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isNoContent());
+        }
+
+        @Test
+        @DisplayName("Anderer Benutzer versucht Angebot zu löschen → 403 Forbidden (IDOR-Guard)")
+        void deleteOffer_byDifferentUser_returns403() throws Exception {
+            String token = obtainToken(); // u1
+            // Offer belongs to u99 (not u1)
+            TutoringOffer foreignOffer = new TutoringOffer("o99", "u99", "Other User", null,
+                    "s1", "Math", "online", "Some desc.", "Mon");
+            when(offerRepository.findById("o99")).thenReturn(Optional.of(foreignOffer));
+
+            mockMvc.perform(delete("/api/offers/o99")
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isForbidden());
         }
 
         @Test

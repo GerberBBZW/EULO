@@ -106,18 +106,17 @@ class UserIntegrationTest extends TestBase {
         }
 
         @Test
-        @DisplayName("Update für unbekannte ID → 404 Not Found")
-        void updateUser_unknownId_returns404() throws Exception {
-            String token = obtainToken();
-            when(userRepository.findById("nobody")).thenReturn(Optional.empty());
+        @DisplayName("Update fremdes Profil → 403 Forbidden (IDOR-Guard schlägt zuerst an)")
+        void updateUser_differentUserId_returns403() throws Exception {
+            String token = obtainToken(); // authenticated as u1
 
-            mockMvc.perform(put("/api/users/nobody")
+            mockMvc.perform(put("/api/users/nobody") // trying to update someone else's profile
                             .contentType(APPLICATION_JSON)
                             .content("""
                                     {"name":"Test","email":"test@school.edu","role":"student"}
                                     """)
                             .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isNotFound());
+                    .andExpect(status().isForbidden());
         }
 
         @Test

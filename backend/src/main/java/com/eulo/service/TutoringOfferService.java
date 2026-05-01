@@ -23,7 +23,7 @@ public class TutoringOfferService {
             offers = offers.stream()
                     .filter(o -> o.getTutorName().toLowerCase().contains(lower)
                             || o.getSubjectName().toLowerCase().contains(lower)
-                            || o.getDescription().toLowerCase().contains(lower))
+                            || (o.getDescription() != null && o.getDescription().toLowerCase().contains(lower)))
                     .collect(Collectors.toList());
         }
  

@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -38,19 +40,23 @@ public class UserController {
 
         String me = (String) auth.getPrincipal();
         if (!me.equals(id)) {
-            return ResponseEntity.status(403).build();  // IDOR guard
+            return ResponseEntity.status(403).build();   // IDOR guard
         }
 
-        return userService.findById(id).map(existing -> {
-            // Whitelist: copy only safe, editable fields
-            existing.setName(InputSanitizer.sanitize(incoming.getName()));
-            existing.setBio(InputSanitizer.sanitize(incoming.getBio()));
-            existing.setAvatarUrl(incoming.getAvatarUrl());
-            existing.setVocationalGroup(incoming.getVocationalGroup());
-            existing.setSubjectsTutored(incoming.getSubjectsTutored());
+        Optional<User> found = userService.findById(id);
+        if (found.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
 
-            // ALL other fields are preserved from DB (id, email, role, password, sessionsCompleted)
-            return ResponseEntity.ok(userService.save(existing));
-        }).orElse(ResponseEntity.notFound().build());
+        User existing = found.get();
+        // Whitelist: copy only safe, user-editable fields
+        existing.setName(InputSanitizer.sanitize(incoming.getName()));
+        existing.setBio(InputSanitizer.sanitize(incoming.getBio()));
+        existing.setAvatarUrl(incoming.getAvatarUrl());
+        existing.setVocationalGroup(incoming.getVocationalGroup());
+        existing.setSubjectsTutored(incoming.getSubjectsTutored());
+        // ALL other fields preserved from DB: id, email, role, password, sessionsCompleted
+
+        return ResponseEntity.ok(userService.save(existing));
     }
 }

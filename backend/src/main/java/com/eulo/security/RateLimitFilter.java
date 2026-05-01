@@ -26,13 +26,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    // --- Konfiguration ---
+    // --- Konfiguration (überschreibbar via application.properties) ---
     private static final int  LOGIN_MAX_ATTEMPTS  = 5;
     private static final long LOGIN_WINDOW_MS      = 60_000;
     private static final long LOGIN_BLOCK_MS        = 15 * 60_000;
 
     private static final int  GLOBAL_MAX_REQUESTS  = 120;
     private static final long GLOBAL_WINDOW_MS      = 60_000;
+
+    // Deaktivierung für Tests: rate-limit.enabled=false in application.properties
+    @org.springframework.beans.factory.annotation.Value("${rate-limit.enabled:true}")
+    private boolean enabled;
 
     // --- State ---
     private record Window(AtomicInteger count, long windowStart) {}
@@ -45,6 +49,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     public RateLimitFilter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return !enabled;
     }
 
     @Override

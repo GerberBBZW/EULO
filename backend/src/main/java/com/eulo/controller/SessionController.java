@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/sessions")
@@ -43,14 +44,14 @@ public class SessionController {
     @PostMapping
     public Session createSession(@Valid @RequestBody Session session, Authentication auth) {
         String me = (String) auth.getPrincipal();
-        session.setSeekerId(me);                                     // IDOR: cannot book as someone else
-        session.setNotes(InputSanitizer.sanitize(session.getNotes())); // XSS sanitize
+        session.setSeekerId(me);
+        session.setNotes(InputSanitizer.sanitize(session.getNotes()));
         return sessionService.save(session);
     }
 
     /**
      * IDOR guard: only the seeker or tutor of the session may change its status.
-     * Validates status value against whitelist.
+     * Status value is validated against a whitelist before any DB access.
      */
     @PatchMapping("/{id}/status")
     public ResponseEntity<Session> updateStatus(
@@ -65,18 +66,19 @@ public class SessionController {
 
         String me = (String) auth.getPrincipal();
 
-        return sessionService.findById(id)
-                .map(session -> {
-                    // IDOR: only participants may update
-                    boolean isSeeker = me.equals(session.getSeekerId());
-                    boolean isTutor  = me.equals(session.getTutorId());
-                    if (!isSeeker && !isTutor) {
-                        return ResponseEntity.status(403).<Session>build();
-                    }
-                    return sessionService.updateStatus(id, status)
-                            .map(ResponseEntity::ok)
-                            .orElse(ResponseEntity.notFound().build());
-                })
+        Optional<Session> found = sessionService.findById(id);
+        if (found.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Session session = found.get();
+        boolean isParticipant = me.equals(session.getSeekerId()) || me.equals(session.getTutorId());
+        if (!isParticipant) {
+            return ResponseEntity.status(403).build();
+        }
+
+        return sessionService.updateStatus(id, status)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 }
