@@ -1,11 +1,12 @@
 import React, { useState, createContext, useContext, ReactNode, useEffect } from 'react';
 import { User } from '../types';
-import { login as apiLogin, getToken, setToken, clearToken, getUser } from '../api';
+import { login as apiLogin, register as apiRegister, getToken, setToken, clearToken, getUser } from '../api';
 
 interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, role: string, vocationalGroup?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -39,6 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentUser(user);
   };
 
+  const register = async (name: string, email: string, password: string, role: string, vocationalGroup?: string) => {
+    const { token, user } = await apiRegister(name, email, password, role, vocationalGroup);
+    setToken(token);
+    setCurrentUser(user);
+  };
+
   const logout = () => {
     clearToken();
     setCurrentUser(null);
@@ -63,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, isAuthenticated: !!currentUser, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ currentUser, isAuthenticated: !!currentUser, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

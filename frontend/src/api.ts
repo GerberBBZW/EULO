@@ -53,6 +53,19 @@ export async function login(email: string, password: string): Promise<AuthRespon
   });
 }
 
+export async function register(
+  name: string,
+  email: string,
+  password: string,
+  role: string,
+  vocationalGroup?: string
+): Promise<AuthResponse> {
+  return request<AuthResponse>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password, role, vocationalGroup }),
+  });
+}
+
 // Users
 export async function getUser(id: string): Promise<User> {
   return request<User>(`/users/${id}`);

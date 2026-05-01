@@ -16,6 +16,7 @@ export interface VocationalGroup {
   id: string;
   name: string;
   description: string;
+  icon?: string;
   subjects: Subject[];
 }
 

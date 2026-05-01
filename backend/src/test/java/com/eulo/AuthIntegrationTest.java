@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -96,6 +97,47 @@ class AuthIntegrationTest {
             when(subjectRepository.findAll()).thenReturn(List.of());
             mockMvc.perform(get("/api/subjects"))
                     .andExpect(status().isOk());
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Register
+    // -----------------------------------------------------------------------
+
+    @Nested
+    @DisplayName("POST /api/auth/register")
+    class Register {
+
+        @Test
+        @DisplayName("Neue Registrierung → 201 Created + JWT-Token (SM-04)")
+        void register_withValidData_returns201AndToken() throws Exception {
+            String newEmail = "new.user@school.edu";
+            User newUser = new User("u99", "New User", newEmail,
+                    passwordEncoder.encode("secret123"),
+                    "student", null, null, null, List.of(), 0);
+            when(userRepository.findByEmail(newEmail)).thenReturn(Optional.empty());
+            when(userRepository.save(any())).thenReturn(newUser);
+
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"name":"New User","email":"%s","password":"secret123"}
+                                    """.formatted(newEmail)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.token").isNotEmpty())
+                    .andExpect(jsonPath("$.user.email").value(newEmail))
+                    .andExpect(jsonPath("$.user.password").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("Registrierung ohne E-Mail → 400 Bad Request (NT-03)")
+        void register_withoutEmail_returns400() throws Exception {
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"name":"Test","password":"secret123"}
+                                    """))
+                    .andExpect(status().isBadRequest());
         }
     }
 

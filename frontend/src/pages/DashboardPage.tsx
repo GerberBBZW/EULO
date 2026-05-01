@@ -121,8 +121,8 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
           </div>
           <div className="relative z-10">
             <Button
+              variant="light"
               size="lg"
-              className="bg-white text-slate-900 hover:bg-slate-100 border-none"
               onClick={() => onNavigate('offer-tutoring')}
             >
               Become a Tutor

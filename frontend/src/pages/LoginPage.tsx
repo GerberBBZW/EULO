@@ -5,7 +5,11 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
 
-export function LoginPage() {
+interface LoginPageProps {
+  onSwitchToSignUp: () => void;
+}
+
+export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -88,9 +92,20 @@ export function LoginPage() {
                   <div className="w-full border-t border-slate-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-slate-500">Students helping students</span>
+                  <span className="bg-white px-2 text-slate-500">New to EULO?</span>
                 </div>
               </div>
+
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={onSwitchToSignUp}
+                  className="text-sm font-medium text-teal-600 hover:text-teal-700 underline underline-offset-2"
+                >
+                  Create an account
+                </button>
+              </div>
+
               <p className="mt-4 text-center text-xs text-slate-400">
                 Demo: alex.rivera@school.edu / password123
               </p>
