@@ -16,6 +16,10 @@ public class SessionService {
 
     private final SessionRepository sessionRepository;
 
+    public Optional<Session> findById(String id) {
+        return sessionRepository.findById(id);
+    }
+
     public List<Session> findByUserId(String userId) {
         return sessionRepository.findBySeekerIdOrTutorId(userId, userId);
     }

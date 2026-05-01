@@ -5,9 +5,12 @@ import com.eulo.model.User;
 import com.eulo.repository.UserRepository;
 import com.eulo.security.JwtUtil;
 import com.eulo.service.UserService;
+import com.eulo.security.InputSanitizer;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -31,9 +34,14 @@ public class AuthController {
             @NotBlank String password) {}
 
     public record RegisterRequest(
-            @NotBlank String name,
-            @NotBlank @Email String email,
-            @NotBlank String password,
+            @NotBlank @Size(max = 100) String name,
+            @NotBlank @Email @Size(max = 200) String email,
+            // min 8 chars, at least 1 letter and 1 digit
+            @NotBlank
+            @Size(min = 8, max = 128, message = "Password must be 8–128 characters")
+            @Pattern(regexp = ".*[A-Za-z].*", message = "Password must contain at least one letter")
+            @Pattern(regexp = ".*[0-9].*", message = "Password must contain at least one digit")
+            String password,
             String role) {}
 
     @PostMapping("/login")
@@ -55,9 +63,13 @@ public class AuthController {
         if (userRepository.findByEmail(request.email()).isPresent()) {
             return ResponseEntity.status(409).build();
         }
-        User user = new User(null, request.name(), request.email(),
+        // Sanitize free-text input, force role to student/teacher only
+        String safeName = InputSanitizer.sanitize(request.name());
+        String safeRole = "teacher".equalsIgnoreCase(request.role()) ? "teacher" : "student";
+
+        User user = new User(null, safeName, request.email(),
                 passwordEncoder.encode(request.password()),
-                request.role() != null ? request.role() : "student",
+                safeRole,
                 null, null, null, null, 0);
         User saved = userRepository.save(user);
         log.info("AUTH_OK: Neuer Benutzer registriert={}", saved.getEmail());
