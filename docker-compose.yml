@@ -17,6 +17,8 @@ services:
     environment:
       SPRING_DATA_MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/eulo}
       JWT_SECRET: ${JWT_SECRET:-euloChangeThisInProductionToALongRandomSecret}
+    volumes:
+      - ./logs:/app/logs          # Log-Dateien auf dem Host (für WAZUH-Agent)
     depends_on:
       - mongodb
     networks:

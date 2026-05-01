@@ -106,9 +106,6 @@ export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
                 </button>
               </div>
 
-              <p className="mt-4 text-center text-xs text-slate-400">
-                Demo: alex.rivera@school.edu / password123
-              </p>
             </div>
           </CardContent>
         </Card>
